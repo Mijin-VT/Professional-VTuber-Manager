@@ -1,4 +1,6 @@
-# 🤖 VT Manager
+<img width="512" height="512" alt="vtmanager" src="https://github.com/user-attachments/assets/b0907e3c-6258-4ac6-866d-54fc96a3d51d" />
+ 
+ # 🤖 VT Manager
 > **Professional VTuber Management & Content Creation Assistant.**
 
 Built with **CustomTkinter**, VT Manager provides a premium, offline-first dashboard tailored to help streaming talents analyze growth strategies, manage schedules, automate tasks with AI, and integrate real-time voice, OBS, and stream monitoring.
