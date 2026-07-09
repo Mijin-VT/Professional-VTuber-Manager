@@ -1,0 +1,207 @@
+@echo off
+setlocal enabledelayedexpansion
+chcp 65001 > nul
+
+echo ===================================================
+echo   VT Manager - Dependency and Python Installer
+echo ===================================================
+echo.
+
+:: 1. Check if running as Administrator (optional but recommended)
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo [OK] Running with Administrator privileges.
+) else (
+    echo [WARNING] You are not running as Administrator. If a program installation fails, right-click INSTALL.bat and choose "Run as administrator".
+)
+echo.
+
+:: 2. Check that winget is available (needed for the system-level installs below)
+set "HAS_WINGET=1"
+winget --version >nul 2>&1
+if !errorLevel! neq 0 (
+    set "HAS_WINGET=0"
+    echo [WARNING] winget was not found on this system. Automatic installation of Python/FFmpeg/VC++ Redistributable will be skipped.
+    echo You can install winget from the "App Installer" package in the Microsoft Store, or install the programs below manually.
+    echo.
+)
+
+:: 3. Determine Python Command
+set "PYTHON_CMD=python"
+set "PYTHON_INSTALLED=0"
+
+:: Verify if python is in PATH and meets version requirement (>= 3.10)
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
+if %errorLevel% == 0 (
+    echo [OK] Python is already installed and meets the minimum version requirement (3.10+). Skipping install.
+    set "PYTHON_INSTALLED=1"
+) else (
+    python --version >nul 2>&1
+    if !errorLevel! == 0 (
+        echo [INFO] Python was detected but it is older than 3.10. An upgrade is required.
+    ) else (
+        echo [INFO] Python is not installed in PATH.
+    )
+)
+
+:: 4. Install Python if missing or outdated
+if "%PYTHON_INSTALLED%"=="0" (
+    if "!HAS_WINGET!"=="0" (
+        echo [ERROR] Python 3.10+ is required and winget is unavailable to install it automatically.
+        echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
+        echo Make sure to check the "Add python.exe to PATH" box during installation.
+        pause
+        exit /b 1
+    )
+
+    echo [PROCESS] Attempting to install Python 3.12 via Winget...
+    winget install --id Python.Python.3.12 -e --silent --accept-source-agreements --accept-package-agreements
+
+    if !errorLevel! == 0 (
+        echo [OK] Python 3.12 was installed successfully.
+
+        set "USER_PYTHON_PATH=%LocalAppData%\Programs\Python\Python312\python.exe"
+        set "SYSTEM_PYTHON_PATH=%ProgramFiles%\Python\Python312\python.exe"
+        set "SYSTEM_PYTHON_PATH2=%SystemDrive%\Python312\python.exe"
+
+        if exist "!USER_PYTHON_PATH!" (
+            set "PYTHON_CMD=!USER_PYTHON_PATH!"
+            set "PYTHON_INSTALLED=1"
+        ) else if exist "!SYSTEM_PYTHON_PATH!" (
+            set "PYTHON_CMD=!SYSTEM_PYTHON_PATH!"
+            set "PYTHON_INSTALLED=1"
+        ) else if exist "!SYSTEM_PYTHON_PATH2!" (
+            set "PYTHON_CMD=!SYSTEM_PYTHON_PATH2!"
+            set "PYTHON_INSTALLED=1"
+        ) else (
+            echo [WARNING] Python was installed but could not be located in common paths.
+            echo Please close this window, open a new console, and run INSTALL.bat again.
+            pause
+            exit /b 1
+        )
+    ) else (
+        echo [ERROR] Python could not be installed automatically.
+        echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
+        echo Make sure to check the "Add python.exe to PATH" box during installation.
+        pause
+        exit /b 1
+    )
+)
+echo.
+
+:: 5. Verify and Install FFmpeg (required by pydub for audio processing)
+ffmpeg -version >nul 2>&1
+if %errorLevel% == 0 (
+    echo [OK] FFmpeg is already installed in PATH. Skipping install.
+) else (
+    echo [INFO] FFmpeg was not detected in PATH.
+    if "!HAS_WINGET!"=="1" (
+        echo [PROCESS] Attempting to install FFmpeg via Winget...
+        winget install --id Gyan.FFmpeg -e --silent --accept-source-agreements --accept-package-agreements
+        if !errorLevel! == 0 (
+            echo [OK] FFmpeg was installed successfully.
+            set "PATH=%PATH%;%ProgramFiles%\FFmpeg\bin"
+        ) else (
+            echo [WARNING] FFmpeg could not be installed automatically.
+            echo Some audio processing features might be limited. You can install it manually from: https://ffmpeg.org/
+        )
+    ) else (
+        echo [WARNING] winget is unavailable, skipping automatic FFmpeg install. Get it manually from: https://ffmpeg.org/
+    )
+)
+echo.
+
+:: 6. Verify and Install MSVC++ Redistributable (required for llama.cpp / Whisper native binaries)
+if exist "%windir%\System32\vcruntime140.dll" (
+    echo [OK] Microsoft Visual C++ Redistributable is already installed. Skipping install.
+) else (
+    echo [INFO] Microsoft Visual C++ Redistributable was not detected.
+    if "!HAS_WINGET!"=="1" (
+        echo [PROCESS] Attempting to install Microsoft Visual C++ Redistributable via Winget...
+        winget install --id Microsoft.VCRedist.2015+.x64 -e --silent --accept-source-agreements --accept-package-agreements
+        if !errorLevel! == 0 (
+            echo [OK] Microsoft Visual C++ Redistributable was installed successfully.
+        ) else (
+            echo [WARNING] Microsoft Visual C++ Redistributable could not be installed automatically.
+            echo Local llama-server or Whisper inference might fail to run. You can download it manually from Microsoft.
+        )
+    ) else (
+        echo [WARNING] winget is unavailable, skipping automatic VC++ Redistributable install. Get it manually from Microsoft's website.
+    )
+)
+echo.
+
+:: 7. Informational GPU check (does not install drivers automatically — CUDA DLLs already ship in .\bin)
+nvidia-smi >nul 2>&1
+if !errorLevel! == 0 (
+    echo [OK] NVIDIA GPU driver detected. GPU-accelerated inference will be available.
+) else (
+    echo [INFO] No NVIDIA GPU driver detected. VT Manager will run in CPU-only mode.
+    echo If you have an NVIDIA GPU, install the latest driver from https://www.nvidia.com/drivers for faster inference.
+)
+echo.
+
+echo [PROCESS] Using Python at: %PYTHON_CMD%
+echo.
+
+:: 8. Upgrade Pip
+echo [PROCESS] Upgrading pip...
+"%PYTHON_CMD%" -m pip install --upgrade pip
+if !errorLevel! neq 0 (
+    echo [WARNING] Error upgrading pip, continuing with library installation...
+)
+echo.
+
+:: 9. Install every package listed in requirements.txt, skipping the ones already installed
+if not exist "requirements.txt" (
+    echo [ERROR] requirements.txt not found next to INSTALL.bat. Cannot continue.
+    pause
+    exit /b 1
+)
+
+echo [PROCESS] Checking Python packages from requirements.txt...
+echo.
+
+for /f "usebackq delims=" %%L in ("requirements.txt") do (
+    set "rawline=%%L"
+    set "line=!rawline: =!"
+
+    if not "!line!"=="" if "!line:~0,1!" neq "#" (
+        set "pkgname=!line!"
+        for /f "tokens=1 delims==<>! [" %%p in ("!line!") do set "pkgname=%%p"
+
+        "%PYTHON_CMD%" -m pip show !pkgname! >nul 2>&1
+        if !errorLevel! == 0 (
+            echo [OK] !pkgname! is already installed. Skipping.
+        ) else (
+            echo [PROCESS] Installing !rawline! ...
+            "%PYTHON_CMD%" -m pip install "!rawline!"
+            if !errorLevel! neq 0 (
+                echo [WARNING] Failed to install !pkgname!. VT Manager may run with that feature disabled.
+            ) else (
+                echo [OK] !pkgname! installed successfully.
+            )
+        )
+    )
+)
+echo.
+
+:: 10. Final verification of core libraries needed just to launch the app window
+echo [PROCESS] Verifying core libraries...
+"%PYTHON_CMD%" -c "import customtkinter, requests, psutil, jinja2, websocket; print('Core libraries: OK')" >nul 2>&1
+if !errorLevel! == 0 (
+    echo [OK] All core libraries were successfully installed and verified!
+    echo.
+    echo ===================================================
+    echo   Installation completed successfully.
+    echo   You can start the application using:
+    echo   python main.py   or   python debug_run.py
+    echo ===================================================
+) else (
+    echo [WARNING] Core library verification failed. Check the messages above for the package that failed to install.
+    echo Voice, memory, and web-search features are optional — VT Manager will still launch without them,
+    echo but core libraries (CustomTkinter, requests, psutil, jinja2, websocket-client) are required.
+)
+
+echo.
+pause

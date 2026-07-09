@@ -1,0 +1,29 @@
+# ─── Core (required to launch VT Manager) ───
+CustomTkinter>=5.2.0
+requests>=2.31.0
+psutil>=5.9.0
+jinja2>=3.1.0
+websocket-client>=1.8.0
+gtts>=2.5.4
+pydub>=0.25.1
+
+# ─── Voice module (STT + local mic capture) ───
+# Without these, voice_manager.py falls back to SIMULATED recording mode.
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.26.0
+faster-whisper>=1.0.0
+
+# ─── Long-term semantic memory (Mem0 + local Chroma vector store) ───
+# Without this, mem0_manager.py disables itself (self.enabled = False).
+mem0ai>=0.1.0
+
+# ─── Live web search for growth-strategy lookups ───
+# Without this, web_search_manager.py silently falls back to the offline case-study catalog.
+duckduckgo-search>=6.1.0
+
+# ─── Optional: GPU/CUDA detection via PyTorch ───
+# Purely a detection convenience — hardware.py falls back to scanning for
+# CUDA DLLs in ./bin if torch isn't installed. Safe to omit on CPU-only setups
+# or if you want to keep the install lightweight.
+# torch>=2.2.0
