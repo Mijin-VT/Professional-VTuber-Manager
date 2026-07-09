@@ -1,4 +1,7 @@
-<img width="512" height="512" alt="vtmanager" src="https://github.com/user-attachments/assets/b0907e3c-6258-4ac6-866d-54fc96a3d51d" />
+<p align="center">
+  <img width="512" height="512" alt="vtmanager" src="https://github.com/user-attachments/assets/b0907e3c-6258-4ac6-866d-54fc96a3d51d" />
+</p>
+
  
  # 🤖 VT Manager
 > **Professional VTuber Management & Content Creation Assistant.**
