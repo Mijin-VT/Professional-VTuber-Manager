@@ -7,11 +7,11 @@ Built with **CustomTkinter**, VT Manager provides a premium, offline-first dashb
 ## ⚠️ NOTICE
 Before downloading the repository, you first need to download and install the program https://git-lfs.com, which is an open-source extension for Git that allows you to manage large and heavy files.
 
-1- Download and Install Git LFS
+### 1. Download and Install Git LFS
 https://git-lfs.com
-2- Activate the tool in the CMD terminal
+### 2. Activate the tool in the CMD terminal
 git lfs install
-3- Clone or download the project normally
+### 1. Clone or download the project normally
 git clone https://github.com/Mijin-VT/Professional-VTuber-Manager.git
 ---
 
