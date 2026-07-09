@@ -105,8 +105,7 @@ We provide a compiled Windows installer that automates all system and python dep
 
 1. Double-click the file **`VTManager_Setup.exe`** in the root of the project.
 2. Select your desired installation path.
-3. The setup wizard will automatically open a Command Prompt running `INSTALL.bat` to verify and install system-level packages. Please wait until it completes, press any key to close the console, and let the installer finish.
-4. Launch the application from your desktop or start menu shortcut!
+3. Launch the application from your desktop or start menu shortcut!
 
 ---
 
