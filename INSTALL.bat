@@ -69,6 +69,7 @@ if "%PYTHON_INSTALLED%"=="0" (
 
     if not "!LOCAL_PYTHON_EXE!"=="" (
         echo [PROCESS] Found local Python installer: !LOCAL_PYTHON_EXE!
+        powershell -Command "Unblock-File -Path '!LOCAL_PYTHON_EXE!'" >nul 2>&1
         echo [PROCESS] Installing Python silently...
         start /wait "" "!LOCAL_PYTHON_EXE!" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
         
@@ -204,6 +205,7 @@ if %errorLevel% == 0 (
     )
     
     if exist "!LFS_INSTALLER!" (
+        powershell -Command "Unblock-File -Path '!LFS_INSTALLER!'" >nul 2>&1
         echo [PROCESS] Installing Git LFS silently...
         "!LFS_INSTALLER!" /SILENT /NORESTART
         del "!LFS_INSTALLER!" >nul 2>&1

@@ -123,7 +123,7 @@ begin
     DeleteFile(StatusFile);
 
     { Prepare the silent background execution of INSTALL.bat }
-    Command := '/c ""' + ExpandConstant('{app}\INSTALL.bat') + '"" ""' + ProgressFile + '"" && echo SUCCESS > ""' + StatusFile + '"" || echo FAILED > ""' + StatusFile + '""';
+    Command := '/c ""' + ExpandConstant('{app}\INSTALL.bat') + '"" ""' + ProgressFile + '"" > ""' + ExpandConstant('{app}\install_log.txt') + '"" 2>&1 && echo SUCCESS > ""' + StatusFile + '"" || echo FAILED > ""' + StatusFile + '""';
     
     { Run hidden (SW_HIDE = 0) and do not wait natively so we can loop }
     if Exec('cmd.exe', Command, ExpandConstant('{app}'), SW_HIDE, ewNoWait, ResultCode) then begin
