@@ -59,45 +59,86 @@ if %errorLevel% == 0 (
 :: 4. Install Python if missing or outdated
 if not "!PROGRESS_FILE!"=="" echo 10 > "!PROGRESS_FILE!"
 if "%PYTHON_INSTALLED%"=="0" (
-    if "!HAS_WINGET!"=="0" (
-        echo [ERROR] Python 3.10+ is required and winget is unavailable to install it automatically.
-        echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
-        echo Make sure to check the "Add python.exe to PATH" box during installation.
-        !PAUSE_CMD!
-        exit /b 1
+    :: Check if local Python installer exists in programs folder
+    set "LOCAL_PYTHON_EXE="
+    if exist "programs\" (
+        for %%f in (programs\python-*.exe) do (
+            set "LOCAL_PYTHON_EXE=%%f"
+        )
     )
 
-    echo [PROCESS] Attempting to install Python 3.12 via Winget...
-    winget install --id Python.Python.3.12 -e --silent --accept-source-agreements --accept-package-agreements
-
-    if !errorLevel! == 0 (
-        echo [OK] Python 3.12 was installed successfully.
-
+    if not "!LOCAL_PYTHON_EXE!"=="" (
+        echo [PROCESS] Found local Python installer: !LOCAL_PYTHON_EXE!
+        echo [PROCESS] Installing Python silently...
+        start /wait "" "!LOCAL_PYTHON_EXE!" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+        
+        :: Verify if it installed successfully
         set "USER_PYTHON_PATH=%LocalAppData%\Programs\Python\Python312\python.exe"
         set "SYSTEM_PYTHON_PATH=%ProgramFiles%\Python\Python312\python.exe"
         set "SYSTEM_PYTHON_PATH2=%SystemDrive%\Python312\python.exe"
+        
+        :: Scan common paths for Python versions
+        for %%v in (312 313 311 310) do (
+            if not "!PYTHON_INSTALLED!"=="1" (
+                set "TEST_USER=%LocalAppData%\Programs\Python\Python%%v\python.exe"
+                set "TEST_SYS=%ProgramFiles%\Python\Python%%v\python.exe"
+                set "TEST_SYS2=%SystemDrive%\Python%%v\python.exe"
+                if exist "!TEST_USER!" (
+                    set "PYTHON_CMD=!TEST_USER!"
+                    set "PYTHON_INSTALLED=1"
+                ) else if exist "!TEST_SYS!" (
+                    set "PYTHON_CMD=!TEST_SYS!"
+                    set "PYTHON_INSTALLED=1"
+                ) else if exist "!TEST_SYS2!" (
+                    set "PYTHON_CMD=!TEST_SYS2!"
+                    set "PYTHON_INSTALLED=1"
+                )
+            )
+        )
+    )
 
-        if exist "!USER_PYTHON_PATH!" (
-            set "PYTHON_CMD=!USER_PYTHON_PATH!"
-            set "PYTHON_INSTALLED=1"
-        ) else if exist "!SYSTEM_PYTHON_PATH!" (
-            set "PYTHON_CMD=!SYSTEM_PYTHON_PATH!"
-            set "PYTHON_INSTALLED=1"
-        ) else if exist "!SYSTEM_PYTHON_PATH2!" (
-            set "PYTHON_CMD=!SYSTEM_PYTHON_PATH2!"
-            set "PYTHON_INSTALLED=1"
-        ) else (
-            echo [WARNING] Python was installed but could not be located in common paths.
-            echo Please close this window, open a new console, and run INSTALL.bat again.
+    :: If still not installed, fall back to Winget
+    if "!PYTHON_INSTALLED!"=="0" (
+        if "!HAS_WINGET!"=="0" (
+            echo [ERROR] Python 3.10+ is required, no local installer found, and winget is unavailable.
+            echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
+            echo Make sure to check the "Add python.exe to PATH" box during installation.
             !PAUSE_CMD!
             exit /b 1
         )
-    ) else (
-        echo [ERROR] Python could not be installed automatically.
-        echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
-        echo Make sure to check the "Add python.exe to PATH" box during installation.
-        !PAUSE_CMD!
-        exit /b 1
+
+        echo [PROCESS] Attempting to install Python 3.12 via Winget...
+        winget install --id Python.Python.3.12 -e --silent --accept-source-agreements --accept-package-agreements
+
+        if !errorLevel! == 0 (
+            echo [OK] Python 3.12 was installed successfully via Winget.
+
+            set "USER_PYTHON_PATH=%LocalAppData%\Programs\Python\Python312\python.exe"
+            set "SYSTEM_PYTHON_PATH=%ProgramFiles%\Python\Python312\python.exe"
+            set "SYSTEM_PYTHON_PATH2=%SystemDrive%\Python312\python.exe"
+
+            if exist "!USER_PYTHON_PATH!" (
+                set "PYTHON_CMD=!USER_PYTHON_PATH!"
+                set "PYTHON_INSTALLED=1"
+            ) else if exist "!SYSTEM_PYTHON_PATH!" (
+                set "PYTHON_CMD=!SYSTEM_PYTHON_PATH!"
+                set "PYTHON_INSTALLED=1"
+            ) else if exist "!SYSTEM_PYTHON_PATH2!" (
+                set "PYTHON_CMD=!SYSTEM_PYTHON_PATH2!"
+                set "PYTHON_INSTALLED=1"
+            ) else (
+                echo [WARNING] Python was installed but could not be located in common paths.
+                echo Please close this window, open a new console, and run INSTALL.bat again.
+                !PAUSE_CMD!
+                exit /b 1
+            )
+        ) else (
+            echo [ERROR] Python could not be installed automatically.
+            echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
+            echo Make sure to check the "Add python.exe to PATH" box during installation.
+            !PAUSE_CMD!
+            exit /b 1
+        )
     )
 )
 if not "!PROGRESS_FILE!"=="" echo 25 > "!PROGRESS_FILE!"

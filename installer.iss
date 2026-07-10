@@ -27,6 +27,8 @@ Source: "data\*"; DestDir: "{app}\data"; Flags: recursesubdirs createallsubdirs 
 Source: "icons\*"; DestDir: "{app}\icons"; Flags: recursesubdirs createallsubdirs skipifsourcedoesntexist
 Source: "models\*"; DestDir: "{app}\models"; Flags: recursesubdirs createallsubdirs skipifsourcedoesntexist
 Source: "plugins\*"; DestDir: "{app}\plugins"; Flags: recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "programs\*"; DestDir: "{app}\programs"; Flags: recursesubdirs createallsubdirs skipifsourcedoesntexist
+
 
 [Icons]
 Name: "{group}\VTuber Manager"; Filename: "{app}\vtmanager.vbs"; IconFilename: "{app}\icons\vtmanager.ico"
