@@ -127,9 +127,18 @@ class DownloadManager:
         task.paused = True
         task.status = DownloadStatus.FAILED
         task.error = "Cancelled by user"
-        # Clean up partial file
+        # Clean up partial and destination files
+        part_dest = task.destination.with_suffix(task.destination.suffix + ".part")
+        if part_dest.exists():
+            try:
+                part_dest.unlink()
+            except Exception:
+                pass
         if task.destination.exists():
-            task.destination.unlink()
+            try:
+                task.destination.unlink()
+            except Exception:
+                pass
         return True
 
     def get_task(self, model_id: str) -> Optional[DownloadTask]:
@@ -148,8 +157,17 @@ class DownloadManager:
         task = self._tasks.get(model_id)
         if not task:
             return False
+        part_dest = task.destination.with_suffix(task.destination.suffix + ".part")
+        if part_dest.exists():
+            try:
+                part_dest.unlink()
+            except Exception:
+                pass
         if task.destination.exists():
-            task.destination.unlink()
+            try:
+                task.destination.unlink()
+            except Exception:
+                pass
         task.status = DownloadStatus.PENDING
         task.progress = 0.0
         task.downloaded_bytes = 0
@@ -164,13 +182,27 @@ class DownloadManager:
         start_time = time.time()
         start_bytes = task.downloaded_bytes
         try:
-            # Check if file already exists
+            # If the final file already exists, it is complete and verified
             if task.destination.exists():
                 task.total_size = task.destination.stat().st_size
                 task.downloaded_bytes = task.total_size
                 task.progress = 1.0
-                self._verify_sha256(task)
+                task.status = DownloadStatus.COMPLETED
+                if task.status_callback:
+                    task.status_callback("completed")
                 return
+
+            part_destination = task.destination.with_suffix(task.destination.suffix + ".part")
+
+            # Check if we are resuming from a part file on disk
+            if part_destination.exists():
+                part_size = part_destination.stat().st_size
+                if task.downloaded_bytes == 0:
+                    task.downloaded_bytes = part_size
+                    start_bytes = part_size
+            else:
+                task.downloaded_bytes = 0
+                start_bytes = 0
 
             # Download with streaming support
             headers = {}
@@ -183,7 +215,16 @@ class DownloadManager:
                 headers=headers,
                 timeout=30,
             )
-            response.raise_for_status()
+            
+            # If server doesn't support Range requests or returns 200 instead of 206, reset download
+            if response.status_code == 200 and task.downloaded_bytes > 0:
+                task.downloaded_bytes = 0
+                start_bytes = 0
+                # Truncate part file
+                with open(part_destination, "wb") as f:
+                    pass
+            else:
+                response.raise_for_status()
 
             # Get total size
             if task.total_size == 0:
@@ -191,10 +232,12 @@ class DownloadManager:
                 if content_range:
                     task.total_size = int(content_range.split("/")[-1])
                 else:
-                    task.total_size = int(response.headers.get("Content-Length", 0))
+                    cl = int(response.headers.get("Content-Length", 0))
+                    task.total_size = cl + task.downloaded_bytes
 
-            # Write in chunks
-            with open(task.destination, "ab") as f:
+            # Write in chunks to the part file
+            write_mode = "ab" if task.downloaded_bytes > 0 else "wb"
+            with open(part_destination, write_mode) as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     with task._lock:
                         if task._cancel_requested:
@@ -244,10 +287,13 @@ class DownloadManager:
                                 eta_str,
                             )
 
-            # Verify SHA256
+            if task.paused:
+                return
+
+            # Verify SHA256 on the part file
             if task.status_callback:
                 task.status_callback("verifying")
-            self._verify_sha256(task)
+            self._verify_sha256(task, part_destination)
 
         except Exception as e:
             task.status = DownloadStatus.FAILED
@@ -255,9 +301,12 @@ class DownloadManager:
             if task.status_callback:
                 task.status_callback("failed")
 
-    def _verify_sha256(self, task: DownloadTask) -> None:
+    def _verify_sha256(self, task: DownloadTask, file_path: Optional[Path] = None) -> None:
         """Verify downloaded file against SHA256 checksum."""
-        if not task.destination.exists():
+        if file_path is None:
+            file_path = task.destination
+
+        if not file_path.exists():
             task.status = DownloadStatus.FAILED
             task.error = "File not found after download"
             return
@@ -274,7 +323,7 @@ class DownloadManager:
 
         # Compute local SHA256
         sha256_hash = hashlib.sha256()
-        with open(task.destination, "rb") as f:
+        with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(65536), b""):
                 sha256_hash.update(chunk)
         computed = sha256_hash.hexdigest().lower()
@@ -285,8 +334,22 @@ class DownloadManager:
                 f"SHA256 mismatch: expected {sha256_expected}, "
                 f"got {computed}"
             )
-            task.destination.unlink(missing_ok=True)
+            try:
+                file_path.unlink(missing_ok=True)
+            except Exception:
+                pass
             return
+
+        # Rename part file to final destination if we verified the part file
+        if file_path != task.destination:
+            try:
+                if task.destination.exists():
+                    task.destination.unlink()
+                file_path.rename(task.destination)
+            except Exception as e:
+                task.status = DownloadStatus.FAILED
+                task.error = f"Failed to rename verified file: {e}"
+                return
 
         task.status = DownloadStatus.COMPLETED
         task.progress = 1.0

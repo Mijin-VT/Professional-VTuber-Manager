@@ -10,10 +10,10 @@ from typing import Any, Optional, List
 
 from app.config_manager import ConfigManager
 
-# Safe import to prevent crash if mem0 is not installed
+# Safe import to prevent crash if mem0 is not installed or broken
 try:
     from mem0.llms.base import LLMBase
-except ImportError:
+except Exception:
     # Dummy class to avoid NameError during definition
     class LLMBase:
         def __init__(self, config=None):
@@ -108,9 +108,9 @@ class Mem0Manager:
             return
 
         try:
-            # Safe import to prevent crash if not installed
+            # Safe import to prevent crash if not installed or broken
             from mem0 import Memory
-        except ImportError as e:
+        except Exception as e:
             print(f"[Mem0Manager] Failed to import mem0. Please run pip install mem0ai. Error: {e}")
             self.enabled = False
             return

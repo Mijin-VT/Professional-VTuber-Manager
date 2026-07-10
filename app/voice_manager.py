@@ -297,7 +297,10 @@ class VoiceManager:
             self._temp_file_counter += 1
             out_path = self.temp_dir / f"astra_stream_{self._temp_file_counter}.wav"
             
-            success = self._synthesize_lily_tts(text, culture, emotion, output_path=out_path)
+            if self.tts_engine == "sapi5":
+                success = self._synthesize_sapi5(text, culture, output_path=out_path)
+            else:
+                success = self._synthesize_lily_tts(text, culture, emotion, output_path=out_path)
             
             if self._cancel_speech:
                 try:
@@ -312,6 +315,80 @@ class VoiceManager:
             else:
                 logger.error("Failed to synthesize stream chunk: %s", text)
             self._text_queue.task_done()
+
+    def _synthesize_sapi5(self, text: str, culture: str, output_path: Path) -> bool:
+        """Synthesize audio using Windows SAPI5 natively."""
+        import re
+        # Clean text from raw markdown lists and brackets so SAPI5 reads them naturally
+        cleaned_text = re.sub(r'(?m)^\s*[-*•+]\s+', '', text)
+        cleaned_text = re.sub(r'(?m)^\s*\d+[\b.)]\s+', '', cleaned_text)
+        cleaned_text = re.sub(r'\[EMOCION:\s*[a-zA-Z]+\]', '', cleaned_text)
+        # Escape quotes for PowerShell cmd fallback
+        escaped_text = cleaned_text.replace('"', '""').replace("'", "''")
+
+        lang_hex = "409"
+        if "es" in culture.lower():
+            lang_hex = "40a"
+        elif "ja" in culture.lower():
+            lang_hex = "411"
+
+        # Try using win32com first
+        try:
+            import win32com.client
+            sp = win32com.client.Dispatch("SAPI.SpVoice")
+            stream = win32com.client.Dispatch("SAPI.SpFileStream")
+            
+            # Try to select the correct voice
+            try:
+                voices = sp.GetVoices()
+                for i in range(voices.Count):
+                    v = voices.Item(i)
+                    if v.GetAttribute("Language") == lang_hex:
+                        sp.Voice = v
+                        break
+            except Exception as ve:
+                logger.warning("Could not filter SAPI5 voice: %s", ve)
+                
+            stream.Open(str(output_path), 3, False)  # 3 = SSFMCreateForWrite
+            sp.AudioOutputStream = stream
+            sp.Speak(cleaned_text)
+            stream.Close()
+            logger.info("SAPI5 synthesized chunk (win32com): '%s'", cleaned_text[:30])
+            return True
+        except Exception as e:
+            logger.warning("SAPI5 via win32com failed or not installed: %s. Falling back to PowerShell subprocess.", e)
+            # Fallback to PowerShell
+            try:
+                ps_cmd = (
+                    f"$sp = New-Object -ComObject SAPI.SpVoice; "
+                    f"$lang_hex = '{lang_hex}'; "
+                    f"foreach ($v in $sp.GetVoices()) {{ "
+                    f"  if ($v.GetAttribute('Language') -eq $lang_hex) {{ "
+                    f"    $sp.Voice = $v; break; "
+                    f"  }} "
+                    f"}}; "
+                    f"$stream = New-Object -ComObject SAPI.SpFileStream; "
+                    f"$stream.Open('{str(output_path)}', 3, $false); "
+                    f"$sp.AudioOutputStream = $stream; "
+                    f"$sp.Speak('{escaped_text}'); "
+                    f"$stream.Close()"
+                )
+                res = subprocess.run(
+                    ["powershell", "-NoProfile", "-Command", ps_cmd],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=10.0
+                )
+                if res.returncode == 0 and output_path.exists():
+                    logger.info("SAPI5 synthesized chunk (PowerShell): '%s'", cleaned_text[:30])
+                    return True
+                else:
+                    logger.error("PowerShell SAPI5 synthesis failed with return code %s", res.returncode)
+                    return False
+            except Exception as pe:
+                logger.error("SAPI5 fallback via PowerShell failed: %s", pe)
+                return False
+
 
     def _synthesize_lily_tts(self, text: str, culture: str, emotion: str, output_path: Path) -> bool:
         """Synthesize audio using gTTS and apply Lily-style emotional modulation with pydub."""

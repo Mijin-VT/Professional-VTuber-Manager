@@ -2,6 +2,18 @@
 setlocal enabledelayedexpansion
 chcp 65001 > nul
 
+set "PROGRESS_FILE=%~1"
+
+:: Define pause command (silent if PROGRESS_FILE is defined)
+if not "!PROGRESS_FILE!"=="" (
+    set "PAUSE_CMD=rem"
+) else (
+    set "PAUSE_CMD=pause"
+)
+
+if not "!PROGRESS_FILE!"=="" echo 0 > "!PROGRESS_FILE!"
+
+
 echo ===================================================
 echo   VT Manager - Dependency and Python Installer
 echo ===================================================
@@ -45,12 +57,13 @@ if %errorLevel% == 0 (
 )
 
 :: 4. Install Python if missing or outdated
+if not "!PROGRESS_FILE!"=="" echo 10 > "!PROGRESS_FILE!"
 if "%PYTHON_INSTALLED%"=="0" (
     if "!HAS_WINGET!"=="0" (
         echo [ERROR] Python 3.10+ is required and winget is unavailable to install it automatically.
         echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
         echo Make sure to check the "Add python.exe to PATH" box during installation.
-        pause
+        !PAUSE_CMD!
         exit /b 1
     )
 
@@ -76,17 +89,18 @@ if "%PYTHON_INSTALLED%"=="0" (
         ) else (
             echo [WARNING] Python was installed but could not be located in common paths.
             echo Please close this window, open a new console, and run INSTALL.bat again.
-            pause
+            !PAUSE_CMD!
             exit /b 1
         )
     ) else (
         echo [ERROR] Python could not be installed automatically.
         echo Please download and install Python 3.10+ manually from: https://www.python.org/downloads/
         echo Make sure to check the "Add python.exe to PATH" box during installation.
-        pause
+        !PAUSE_CMD!
         exit /b 1
     )
 )
+if not "!PROGRESS_FILE!"=="" echo 25 > "!PROGRESS_FILE!"
 echo.
 
 :: 5. Verify and Install FFmpeg (required by pydub for audio processing)
@@ -109,6 +123,7 @@ if %errorLevel% == 0 (
         echo [WARNING] winget is unavailable, skipping automatic FFmpeg install. Get it manually from: https://ffmpeg.org/
     )
 )
+if not "!PROGRESS_FILE!"=="" echo 45 > "!PROGRESS_FILE!"
 echo.
 
 :: 6. Verify and Install MSVC++ Redistributable (required for llama.cpp / Whisper native binaries)
@@ -129,9 +144,64 @@ if exist "%windir%\System32\vcruntime140.dll" (
         echo [WARNING] winget is unavailable, skipping automatic VC++ Redistributable install. Get it manually from Microsoft's website.
     )
 )
+if not "!PROGRESS_FILE!"=="" echo 60 > "!PROGRESS_FILE!"
 echo.
 
-:: 7. Informational GPU check (does not install drivers automatically — CUDA DLLs already ship in .\bin)
+:: 7. Verify and Install Git LFS
+git lfs --version >nul 2>&1
+if %errorLevel% == 0 (
+    echo [OK] Git LFS is already installed. Skipping install.
+) else (
+    echo [INFO] Git LFS was not detected in PATH.
+    echo [PROCESS] Downloading Git LFS installer from https://git-lfs.com...
+    set "LFS_URL=https://github.com/git-lfs/git-lfs/releases/download/v3.6.0/git-lfs-windows-v3.6.0.exe"
+    set "LFS_INSTALLER=%TEMP%\git-lfs-installer.exe"
+    
+    curl -L -s -o "!LFS_INSTALLER!" "!LFS_URL!"
+    if not exist "!LFS_INSTALLER!" (
+        powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '!LFS_URL!' -OutFile '!LFS_INSTALLER!'" >nul 2>&1
+    )
+    
+    if exist "!LFS_INSTALLER!" (
+        echo [PROCESS] Installing Git LFS silently...
+        "!LFS_INSTALLER!" /SILENT /NORESTART
+        del "!LFS_INSTALLER!" >nul 2>&1
+        
+        :: Refresh PATH locally for the current session to include common Git/Git LFS locations
+        set "PATH=%PATH%;%ProgramFiles%\Git\cmd;%ProgramFiles%\Git\bin;%ProgramFiles%\Git LFS;%LocalAppData%\Programs\Git LFS"
+        
+        git lfs --version >nul 2>&1
+        if !errorLevel! == 0 (
+            echo [OK] Git LFS was installed successfully.
+        ) else (
+            echo [WARNING] Git LFS was installed but is not yet in PATH. You may need to restart your terminal.
+        )
+    ) else (
+        echo [WARNING] Could not download Git LFS from git-lfs.com.
+        if "!HAS_WINGET!"=="1" (
+            echo [PROCESS] Attempting to install Git LFS via Winget...
+            winget install --id GitHub.GitLFS -e --silent --accept-source-agreements --accept-package-agreements
+            if !errorLevel! == 0 (
+                :: Refresh PATH locally
+                set "PATH=%PATH%;%ProgramFiles%\Git\cmd;%ProgramFiles%\Git\bin;%ProgramFiles%\Git LFS;%LocalAppData%\Programs\Git LFS"
+                echo [OK] Git LFS was installed successfully via Winget.
+            ) else (
+                echo [WARNING] Git LFS installation via Winget failed.
+            )
+        ) else (
+            echo [WARNING] Winget is unavailable. Please install Git LFS manually from https://git-lfs.com
+        )
+    )
+)
+if not "!PROGRESS_FILE!"=="" echo 75 > "!PROGRESS_FILE!"
+
+:: Activate Git LFS in the background
+echo [PROCESS] Activating Git LFS in the background...
+start /b cmd /c "git lfs install" >nul 2>&1
+echo [OK] Git LFS activation command triggered in the background.
+echo.
+
+:: 8. Informational GPU check (does not install drivers automatically — CUDA DLLs already ship in .\bin)
 nvidia-smi >nul 2>&1
 if !errorLevel! == 0 (
     echo [OK] NVIDIA GPU driver detected. GPU-accelerated inference will be available.
@@ -144,18 +214,19 @@ echo.
 echo [PROCESS] Using Python at: %PYTHON_CMD%
 echo.
 
-:: 8. Upgrade Pip
+:: 9. Upgrade Pip
 echo [PROCESS] Upgrading pip...
 "%PYTHON_CMD%" -m pip install --upgrade pip
 if !errorLevel! neq 0 (
     echo [WARNING] Error upgrading pip, continuing with library installation...
 )
+if not "!PROGRESS_FILE!"=="" echo 80 > "!PROGRESS_FILE!"
 echo.
 
-:: 9. Install every package listed in requirements.txt, skipping the ones already installed
+:: 10. Install every package listed in requirements.txt, skipping the ones already installed
 if not exist "requirements.txt" (
     echo [ERROR] requirements.txt not found next to INSTALL.bat. Cannot continue.
-    pause
+    !PAUSE_CMD!
     exit /b 1
 )
 
@@ -184,9 +255,10 @@ for /f "usebackq delims=" %%L in ("requirements.txt") do (
         )
     )
 )
+if not "!PROGRESS_FILE!"=="" echo 95 > "!PROGRESS_FILE!"
 echo.
 
-:: 10. Final verification of core libraries needed just to launch the app window
+:: 11. Final verification of core libraries needed just to launch the app window
 echo [PROCESS] Verifying core libraries...
 "%PYTHON_CMD%" -c "import customtkinter, requests, psutil, jinja2, websocket; print('Core libraries: OK')" >nul 2>&1
 if !errorLevel! == 0 (
@@ -197,11 +269,14 @@ if !errorLevel! == 0 (
     echo   You can start the application using:
     echo   python main.py   or   python debug_run.py
     echo ===================================================
+    if not "!PROGRESS_FILE!"=="" echo 100 > "!PROGRESS_FILE!"
 ) else (
     echo [WARNING] Core library verification failed. Check the messages above for the package that failed to install.
     echo Voice, memory, and web-search features are optional — VT Manager will still launch without them,
     echo but core libraries (CustomTkinter, requests, psutil, jinja2, websocket-client) are required.
+    exit /b 2
 )
 
 echo.
-pause
+!PAUSE_CMD!
+exit /b 0

@@ -85,7 +85,13 @@ class MessageBubble(ctk.CTkFrame):
 
             if text_widget is not None:
                 display_info = text_widget.count("1.0", "end-1c", "displaylines")
-                num_lines = max(1, (display_info[0] + 1) if display_info else 1)
+                if isinstance(display_info, tuple):
+                    num_lines = display_info[0] if display_info else 1
+                elif isinstance(display_info, int):
+                    num_lines = display_info
+                else:
+                    num_lines = 1
+                num_lines = max(1, num_lines + 1)
                 # 23 px por línea + 28 px de padding vertical
                 height = max(70, min(1200, num_lines * 23 + 28))
             else:

@@ -334,7 +334,7 @@ class PlanningPage(ctk.CTkScrollableFrame):
             try:
                 response = self._chat_mgr.generate(prompt, model_path)
                 self.after(0, lambda: self._on_ideas_generated(response or ""))
-            except Exception as e:
+            except Exception:
                 self.after(0, lambda: self._on_ideas_generated(""))
 
         threading.Thread(target=inference_thread, daemon=True).start()
