@@ -108,12 +108,63 @@ var
   ProgressStr: AnsiString;
   ProgressVal: Integer;
   StatusStr: AnsiString;
+  PythonInstaller: String;
+  LFSInstaller: String;
+  PSCommand: String;
 begin
   if CurStep = ssPostInstall then begin
     { Show the second progress bar and status }
     PythonStatusLabel.Visible := True;
     PythonProgressGauge.Visible := True;
-    PythonStatusLabel.Caption := 'Instalando Python y dependencias en segundo plano...';
+    PythonProgressGauge.Position := 0;
+
+    { 1. Download and Install Python }
+    PythonInstaller := ExpandConstant('{tmp}\python-3.12.0-amd64.exe');
+    DeleteFile(PythonInstaller);
+    
+    PythonStatusLabel.Caption := 'Descargando instalador de Python...';
+    PSCommand := '-Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri ''https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe'' -OutFile ''' + PythonInstaller + '''"';
+    
+    { Run powershell hidden and wait until download completes }
+    if Exec('powershell.exe', PSCommand, ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+      if FileExists(PythonInstaller) then begin
+        PythonStatusLabel.Caption := 'Ejecutando instalador de Python (acepte advertencias)...';
+        { Unblock using powershell just in case }
+        Exec('powershell.exe', '-Command "Unblock-File -Path ''' + PythonInstaller + '''"', ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        { Run in the foreground and wait }
+        Exec(PythonInstaller, '', ExpandConstant('{tmp}'), SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+        DeleteFile(PythonInstaller);
+      end else begin
+        MsgBox('No se pudo descargar el instalador de Python.', mbError, MB_OK);
+      end;
+    end else begin
+      MsgBox('No se pudo iniciar la descarga de Python.', mbError, MB_OK);
+    end;
+
+    { 2. Download and Install Git LFS }
+    LFSInstaller := ExpandConstant('{tmp}\git-lfs-installer.exe');
+    DeleteFile(LFSInstaller);
+    
+    PythonStatusLabel.Caption := 'Descargando instalador de Git LFS...';
+    PSCommand := '-Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri ''https://github.com/git-lfs/git-lfs/releases/download/v3.6.0/git-lfs-windows-v3.6.0.exe'' -OutFile ''' + LFSInstaller + '''"';
+    
+    { Run powershell hidden and wait until download completes }
+    if Exec('powershell.exe', PSCommand, ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+      if FileExists(LFSInstaller) then begin
+        PythonStatusLabel.Caption := 'Ejecutando instalador de Git LFS (acepte advertencias)...';
+        { Unblock using powershell just in case }
+        Exec('powershell.exe', '-Command "Unblock-File -Path ''' + LFSInstaller + '''"', ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        { Run in the foreground and wait }
+        Exec(LFSInstaller, '', ExpandConstant('{tmp}'), SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+        DeleteFile(LFSInstaller);
+      end else begin
+        MsgBox('No se pudo descargar el instalador de Git LFS.', mbError, MB_OK);
+      end;
+    end else begin
+      MsgBox('No se pudo iniciar la descarga de Git LFS.', mbError, MB_OK);
+    end;
+
+    PythonStatusLabel.Caption := 'Instalando dependencias de Python en segundo plano...';
     
     ProgressFile := ExpandConstant('{tmp}\install_progress.txt');
     StatusFile := ExpandConstant('{tmp}\install_status.txt');
