@@ -110,13 +110,6 @@ ARCHIVOS VALIDOS/
 ## 🚀 Installation & Running
 
 ### Option A: Windows GUI Installer (Recommended)  (In progress) 
-We provide a compiled Windows installer that automates all system and python dependencies (including Python 3.12, FFmpeg, and VC++ Redistributables via Winget):
-
-1. Download the installer from this link
-*   **https://github.com/Mijin-VT/Professional-VTuber-Manager/releases/download/v1.0.0/VTManager_Setup.exe** 
-2. Double-click the file **`VTManager_Setup.exe`** 
-3. Select your desired installation path.
-4. Launch the application from your desktop or start menu shortcut!
 
 ---
 
