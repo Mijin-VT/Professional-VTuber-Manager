@@ -267,7 +267,7 @@ class SettingsPage(ctk.CTkScrollableFrame):
             voice_card, font=font(10), height=28,
             fg_color=C["input_bg"], selected_color=C["accent"],
             selected_hover_color=C["accent_hover"], text_color=C["text_primary"],
-            values=["Lily-TTS (gTTS + pydub)", "SAPI5 (Windows Native)"],
+            values=["Lily-TTS (gTTS + pydub)", "SAPI5 (Windows Native)", "Kokoro-TTS"],
             command=lambda v: self._save_voice_settings()
         )
         self._tts_engine_segmented.grid(row=2, column=1, padx=(0, SPACING["lg"]), pady=SPACING["xs"], sticky="ew")
@@ -275,6 +275,8 @@ class SettingsPage(ctk.CTkScrollableFrame):
         current_engine = self._config.get("voice.tts_engine", "lily-tts")
         if current_engine == "sapi5":
             self._tts_engine_segmented.set("SAPI5 (Windows Native)")
+        elif current_engine == "kokoro":
+            self._tts_engine_segmented.set("Kokoro-TTS")
         else:
             self._tts_engine_segmented.set("Lily-TTS (gTTS + pydub)")
 
@@ -468,7 +470,12 @@ class SettingsPage(ctk.CTkScrollableFrame):
     def _save_voice_settings(self):
         """Lee los campos de la UI de voz y los guarda en config."""
         engine_display = self._tts_engine_segmented.get()
-        engine_val = "sapi5" if "SAPI5" in engine_display else "lily-tts"
+        if "SAPI5" in engine_display:
+            engine_val = "sapi5"
+        elif "Kokoro" in engine_display:
+            engine_val = "kokoro"
+        else:
+            engine_val = "lily-tts"
             
         self._config.set("voice.stt_enabled", self._stt_enabled_var.get())
         self._config.set("voice.tts_enabled", self._tts_enabled_var.get())

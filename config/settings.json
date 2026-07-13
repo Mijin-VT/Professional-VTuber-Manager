@@ -37,7 +37,8 @@
     "voice": {
         "stt_enabled": true,
         "tts_enabled": true,
-        "tts_engine": "lily-tts",
+        "tts_engine": "kokoro",
+        "kokoro_voice": "ef_dora",
         "language": "auto",
         "wake_word": "Astra",
         "vad_threshold": 300

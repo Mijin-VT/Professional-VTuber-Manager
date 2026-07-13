@@ -27,3 +27,8 @@ duckduckgo-search>=6.1.0
 # CUDA DLLs in ./bin if torch isn't installed. Safe to omit on CPU-only setups
 # or if you want to keep the install lightweight.
 # torch>=2.2.0
+
+# ─── Kokoro-TTS engine ───
+fastrtc>=0.0.22
+kokoro-onnx>=0.4.7
+av>=14.1.0

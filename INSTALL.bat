@@ -45,7 +45,7 @@ set "PYTHON_INSTALLED=0"
 :: Verify if python is in PATH and meets version requirement (>= 3.10)
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
 if %errorLevel% == 0 (
-    echo [OK] Python is already installed and meets the minimum version requirement (3.10+). Skipping install.
+    echo [OK] Python is already installed and meets the minimum version requirement 3.10+. Skipping install.
     set "PYTHON_INSTALLED=1"
 ) else (
     python --version >nul 2>&1
@@ -279,7 +279,7 @@ if !errorLevel! == 0 (
 ) else (
     echo [WARNING] Core library verification failed. Check the messages above for the package that failed to install.
     echo Voice, memory, and web-search features are optional — VT Manager will still launch without them,
-    echo but core libraries (CustomTkinter, requests, psutil, jinja2, websocket-client) are required.
+    echo but core libraries CustomTkinter, requests, psutil, jinja2, websocket-client are required.
     exit /b 2
 )
 

@@ -299,6 +299,8 @@ class VoiceManager:
             
             if self.tts_engine == "sapi5":
                 success = self._synthesize_sapi5(text, culture, output_path=out_path)
+            elif self.tts_engine == "kokoro":
+                success = self._synthesize_kokoro(text, culture, emotion, output_path=out_path)
             else:
                 success = self._synthesize_lily_tts(text, culture, emotion, output_path=out_path)
             
@@ -455,6 +457,65 @@ class VoiceManager:
                     temp_mp3.unlink()
                 except:
                     pass
+
+    def _synthesize_kokoro(self, text: str, culture: str, emotion: str, output_path: Path) -> bool:
+        """Synthesize audio using Kokoro TTS from fastrtc."""
+        try:
+            from fastrtc import get_tts_model, KokoroTTSOptions
+            import soundfile as sf
+            import numpy as np
+            import re
+        except ImportError:
+            logger.error("fastrtc or soundfile is not installed. Please install them to use Kokoro TTS.")
+            return False
+
+        # Clean text from raw markdown lists and brackets so Kokoro reads them naturally
+        cleaned_text = re.sub(r'(?m)^\s*[-*•+]\s+', '', text)
+        cleaned_text = re.sub(r'(?m)^\s*\d+[\b.)]\s+', '', cleaned_text)
+        cleaned_text = re.sub(r'\[EMOCION:\s*[a-zA-Z]+\]', '', cleaned_text)
+
+        try:
+            # Map culture to Kokoro lang code
+            lang = "es"
+            if "en" in culture.lower():
+                lang = "en-us"
+            elif "ja" in culture.lower():
+                lang = "ja"
+            elif "es" in culture.lower():
+                lang = "es"
+
+            # Determine voice (default is ef_dora for Spanish, af_heart/af_bella for English)
+            voice = self.config.get("voice.kokoro_voice", "ef_dora")
+
+            # Initialize/get the model (fastrtc caches the model object and downloads/warms it up automatically)
+            tts_model = get_tts_model()
+            options = KokoroTTSOptions(voice=voice, lang=lang)
+
+            # Collect audio chunks
+            audio_data = []
+            sr = 24000
+            
+            for chunk in tts_model.stream_tts_sync(cleaned_text, options=options):
+                if chunk is not None:
+                    # chunk is a tuple (sample_rate, ndarray)
+                    sr, data = chunk
+                    audio_data.append(data)
+            
+            if not audio_data:
+                logger.error("Kokoro TTS returned no audio data")
+                return False
+
+            # Concatenate all chunks into one continuous array
+            full_audio = np.concatenate(audio_data, axis=0)
+
+            # Save as WAV file
+            sf.write(str(output_path), full_audio, sr)
+            logger.info("Kokoro-TTS synthesized chunk: '%s' (Voice: %s, Lang: %s)", cleaned_text[:30], voice, lang)
+            return True
+
+        except Exception as e:
+            logger.error("Failed to synthesize audio with Kokoro-TTS: %s", e)
+            return False
 
     def _playback_worker(self):
         """Consumes synthesized wav files and plays them sequentially with a pause."""
