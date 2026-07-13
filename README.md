@@ -109,7 +109,7 @@ ARCHIVOS VALIDOS/
 
 ## 🚀 Installation & Running
 
-### Option A: Windows GUI Installer (Recommended)
+### Option A: Windows GUI Installer (Recommended)  (En proceso) 
 We provide a compiled Windows installer that automates all system and python dependencies (including Python 3.12, FFmpeg, and VC++ Redistributables via Winget):
 
 1. Download the installer from this link
