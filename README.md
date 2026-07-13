@@ -1,15 +1,26 @@
-﻿<p align="center">
-  <img width="300" height="300" alt="vtmanager" src="https://github.com/user-attachments/assets/b0907e3c-6258-4ac6-866d-54fc96a3d51d" />
-</p>
-
-﻿<p align="center">
-  <img width="300" height="300" alt="vtmanager" src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true" />
-</p>
-
 <p align="center">
-  <img width="300" height="300" alt="vtmanager" src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true" />
+  <img
+    src="https://github.com/user-attachments/assets/b0907e3c-6258-4ac6-866d-54fc96a3d51d"
+    alt="VT Manager Logo"
+    width="300">
 </p>
 
+<table align="center">
+  <tr>
+    <td align="center">
+      <img
+        src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true"
+        alt="Chat Interface"
+        width="450">
+    </td>
+    <td align="center">
+      <img
+        src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true"
+        alt="User Manual"
+        width="450">
+    </td>
+  </tr>
+</table>
  
 # 🤖 VT Manager
 > **Professional VTuber Management & Content Creation Assistant.**
