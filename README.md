@@ -127,7 +127,7 @@ Before installing Python packages, ensure the following system-level tools are i
 *   **Python 3.10+**: Ensure Python is in your system `PATH`.
 *   **FFmpeg**: Required by `pydub` and `fastrtc` for audio processing and format conversion.
 *   **Microsoft Visual C++ Redistributable**: Required for Whisper and llama.cpp native binaries.
-*   **Git LFS: Required to download the two large files from the repository.
+*   Git LFS: Required to download the two large files from the repository.
     ```powershell
     git lfs install
     ```
