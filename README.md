@@ -109,7 +109,7 @@ ARCHIVOS VALIDOS/
 
 ## 🚀 Installation & Running
 
-### Option A: Windows GUI Installer (Recommended)  (En proceso) 
+### Option A: Windows GUI Installer (Recommended)  (In progress) 
 We provide a compiled Windows installer that automates all system and python dependencies (including Python 3.12, FFmpeg, and VC++ Redistributables via Winget):
 
 1. Download the installer from this link
@@ -146,7 +146,7 @@ Before installing Python packages, ensure the following system-level tools are i
 *   **Python 3.10+**: Ensure Python is in your system `PATH`.
 *   **FFmpeg**: Required by `pydub` and `fastrtc` for audio processing and format conversion.
 *   **Microsoft Visual C++ Redistributable**: Required for Whisper and llama.cpp native binaries.
-*   **Git LFS**: Required if you plan to clone/download large model assets. Activate it using:
+*   Git LFS: Required to download the two large files from the repository.
     ```powershell
     git lfs install
     ```
