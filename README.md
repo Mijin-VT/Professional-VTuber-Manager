@@ -3,7 +3,11 @@
 </p>
 
 ﻿<p align="center">
-  <img width="300" height="300" alt="vtmanager" src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/vtmanager.png?raw=true" />
+  <img width="300" height="300" alt="vtmanager" src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true" />
+</p>
+
+<p align="center">
+  <img width="300" height="300" alt="vtmanager" src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true" />
 </p>
 
  
