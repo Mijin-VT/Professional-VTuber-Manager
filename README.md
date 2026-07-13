@@ -120,7 +120,26 @@ We provide a compiled Windows installer that automates all system and python dep
 
 ---
 
-### Option B: Manual Installation (Developers)
+### Option B: Easy Installation & Execution (INSTALL.bat & VBScript)
+
+En lugar de escribir comandos uno a uno, solo necesitas hacer esto:
+
+#### 1. Instalación (Un solo clic)
+Haz doble clic en el archivo **`INSTALL.bat`**. Este archivo se encargará de hacer todo automáticamente en segundo plano:
+*   Verificar e instalar Python 3.12 (si no lo tienes).
+*   Instalar **FFmpeg** y **VC++ Redistributable** (si faltan).
+*   Activar **Git LFS**.
+*   Ejecutar `pip install -r requirements.txt` (que ya incluye todas las librerías de CustomTkinter, Mem0, fastrtc, kokoro, sounddevice, etc.).
+*   Verificar que todo esté correcto.
+
+#### 2. Ejecutar la Aplicación
+Para abrir la aplicación, tienes tres opciones según lo que prefieras:
+*   **`vtmanager.vbs` (Recomendado para el usuario final):** Abre la aplicación al 100% de forma invisible en segundo plano (sin mostrar ninguna molesta ventana negra de consola CMD).
+*   **`vtmanager_debug.bat` o `python main.py` (Para desarrollo/pruebas):** Abre la aplicación mostrando la ventana de consola CMD para que puedas ver las salidas de depuración y logs en tiempo real.
+
+---
+
+### Option C: Manual Installation (Developers)
 
 #### 1. Install System Dependencies
 Before installing Python packages, ensure the following system-level tools are installed on your Windows machine:
