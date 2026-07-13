@@ -9,13 +9,13 @@
   <tr>
     <td align="center">
       <img
-        src="[https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true](https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true)"
+        src="https://raw.githubusercontent.com/Mijin-VT/Professional-VTuber-Manager/refs/heads/master/icons/Manual.JPG"
         alt="Chat Interface"
         width="450">
     </td>
     <td align="center">
       <img
-        src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true"
+        src="https://raw.githubusercontent.com/Mijin-VT/Professional-VTuber-Manager/refs/heads/master/icons/image.png"
         alt="User Manual"
         width="450">
     </td>
