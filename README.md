@@ -9,7 +9,7 @@
   <tr>
     <td align="center">
       <img
-        src="https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true"
+        src="[https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/image.png?raw=true](https://github.com/Mijin-VT/Professional-VTuber-Manager/blob/master/icons/Manual.JPG?raw=true)"
         alt="Chat Interface"
         width="450">
     </td>
