@@ -123,23 +123,31 @@ We provide a compiled Windows installer that automates all system and python dep
 ### Option B: Manual Installation (Developers)
 
 #### 1. Install System Dependencies
-Ensure you have Python 3.10+ installed on your Windows machine. Install dependencies using:
+Before installing Python packages, ensure the following system-level tools are installed on your Windows machine:
+*   **Python 3.10+**: Ensure Python is in your system `PATH`.
+*   **FFmpeg**: Required by `pydub` and `fastrtc` for audio processing and format conversion.
+*   **Microsoft Visual C++ Redistributable**: Required for Whisper and llama.cpp native binaries.
+*   **Git LFS**: Required if you plan to clone/download large model assets. Activate it using:
+    ```powershell
+    git lfs install
+    ```
+
+#### 2. Install Python Dependencies
+Install all required libraries (including CustomTkinter, SoundDevice, faster-whisper, Mem0, fastrtc, and kokoro-onnx) using:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-*Optional Voice Pack (Recommended for microphone input & Whisper STT):*
-```powershell
-pip install sounddevice numpy faster-whisper soundfile
-```
-
-#### 2. Running the App
-Execute the main script from the `ARCHIVOS VALIDOS` directory:
+#### 3. Running the App
+Execute the main script from the project root directory:
 
 ```powershell
 python main.py
 ```
+
+*To run the application cleanly in the background (hidden):*
+Double-click the **`vtmanager.vbs`** file.
 
 *To run with crash logging and standard output capturing:*
 ```powershell
