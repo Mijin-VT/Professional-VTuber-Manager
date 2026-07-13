@@ -122,20 +122,20 @@ We provide a compiled Windows installer that automates all system and python dep
 
 ### Option B: Easy Installation & Execution (INSTALL.bat & VBScript)
 
-En lugar de escribir comandos uno a uno, solo necesitas hacer esto:
+Instead of writing commands one by one, you just need to do this:
 
-#### 1. Instalación (Un solo clic)
-Haz doble clic en el archivo **`INSTALL.bat`**. Este archivo se encargará de hacer todo automáticamente en segundo plano:
-*   Verificar e instalar Python 3.12 (si no lo tienes).
-*   Instalar **FFmpeg** y **VC++ Redistributable** (si faltan).
-*   Activar **Git LFS**.
-*   Ejecutar `pip install -r requirements.txt` (que ya incluye todas las librerías de CustomTkinter, Mem0, fastrtc, kokoro, sounddevice, etc.).
-*   Verificar que todo esté correcto.
+#### 1. Installation (Single Click)
+Double-click the **`INSTALL.bat`** file. This script will configure everything automatically in the background:
+*   Verify and install Python 3.12 (if not already installed).
+*   Install **FFmpeg** and **VC++ Redistributables** (if missing from your system).
+*   Activate **Git LFS**.
+*   Run `pip install -r requirements.txt` (which already includes all libraries like CustomTkinter, Mem0, fastrtc, kokoro, sounddevice, etc.).
+*   Verify that everything is installed correctly.
 
-#### 2. Ejecutar la Aplicación
-Para abrir la aplicación, tienes tres opciones según lo que prefieras:
-*   **`vtmanager.vbs` (Recomendado para el usuario final):** Abre la aplicación al 100% de forma invisible en segundo plano (sin mostrar ninguna molesta ventana negra de consola CMD).
-*   **`vtmanager_debug.bat` o `python main.py` (Para desarrollo/pruebas):** Abre la aplicación mostrando la ventana de consola CMD para que puedas ver las salidas de depuración y logs en tiempo real.
+#### 2. Running the App
+To open the application, you have three options depending on your preference:
+*   **`vtmanager.vbs` (Recommended for final users):** Launches the application completely in the background (hidden), without showing any command prompt window.
+*   **`vtmanager_debug.bat` or `python main.py` (For development/testing):** Launches the application showing the CMD console window so you can view debugging output and logs in real-time.
 
 ---
 
